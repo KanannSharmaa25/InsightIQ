@@ -240,7 +240,9 @@ Include:
 
 ## 👤 Author
 
-**Kanan Sharma**
-Built as a portfolio-grade analytics project combining data science, statistics, and explainable AI principles.
+Kanan Sharma  
+Portfolio project focused on applied data science, statistical analysis, and explainable AI.
+
 
 ---
+
