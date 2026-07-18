@@ -7,6 +7,7 @@ from core.confidence import confidence_interval
 from core.insight_flags import generate_flags
 from core.summary_generator import generate_summary
 from core.ai_explainer import answer_question
+from core.storyteller import generate_story
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(
@@ -127,6 +128,7 @@ if df is None:
     st.stop()
 
 st.dataframe(df, use_container_width=True)
+
 # ---------------- DATA QUALITY DASHBOARD ----------------
 st.divider()
 st.markdown("### 🧪 Data Quality Check")
@@ -151,7 +153,6 @@ with col3:
     else:
         st.warning("No date column detected")
 
-# Detailed warnings
 if dq["missing_columns"]:
     st.warning("Missing values detected in columns:")
     st.json(dq["missing_columns"])
@@ -183,6 +184,27 @@ target_col = st.selectbox(
 # Store confirmed mapping
 st.session_state["date_column"] = date_col
 st.session_state["target_column"] = target_col
+
+# ---------------- STOCK-SPECIFIC COLUMN MAPPING ----------------
+buy_col = current_col = qty_col = None
+
+if mode == "stocks":
+    st.divider()
+    st.markdown("### 💰 Portfolio Column Mapping")
+    st.caption("Stock mode needs three specific fields — these can't be auto-guessed like a single target column.")
+
+    numeric_cols = df.select_dtypes(include="number").columns.tolist()
+
+    stock_col1, stock_col2, stock_col3 = st.columns(3)
+    with stock_col1:
+        buy_col = st.selectbox("Buy Price column", options=numeric_cols,
+                                index=numeric_cols.index("Buy_Price") if "Buy_Price" in numeric_cols else 0)
+    with stock_col2:
+        current_col = st.selectbox("Current Price column", options=numeric_cols,
+                                    index=numeric_cols.index("Current_Price") if "Current_Price" in numeric_cols else 0)
+    with stock_col3:
+        qty_col = st.selectbox("Quantity column", options=numeric_cols,
+                                index=numeric_cols.index("Quantity") if "Quantity" in numeric_cols else 0)
 
 # ---------------- TIME GROUPING ----------------
 st.divider()
@@ -306,19 +328,19 @@ st.markdown("### 🧠 Smart Insights")
 
 if mode == "sales":
     from modes.sales.analysis import sales_insights
-    insights = sales_insights(df)
+    insights = sales_insights(df, date_col=date_col, target_col=target_col)
 
-    st.metric("Total Sales", insights["total_sales"])
-    st.metric("Average Sales", insights["average_sales"])
+    st.metric("Total Sales", insights.get("total_sales", 0))
+    st.metric("Average Sales", insights.get("average_sales", 0))
 
 elif mode == "stocks":
     from modes.stocks.analysis import stock_insights
-    insights = stock_insights(df)
+    insights = stock_insights(df, buy_col=buy_col, current_col=current_col, qty_col=qty_col)
 
-    st.metric("Total Investment", insights["total_investment"], help="Total invested capital")
-    st.metric("Current Value", insights["current_value"], help="Current portfolio value")
-    st.metric("Total P/L", insights["total_profit_loss"])
-    st.metric("Volatility", insights["volatility"])
+    st.metric("Total Investment", insights.get("total_investment", 0), help="Total invested capital")
+    st.metric("Current Value", insights.get("current_value", 0), help="Current portfolio value")
+    st.metric("Total P/L", insights.get("total_profit_loss", 0))
+    st.metric("Volatility", insights.get("volatility", 0))
 
 else:
     insights = None
@@ -327,21 +349,23 @@ else:
 st.divider()
 st.markdown("### 🚩 Smart Alerts")
 
-for flag in generate_flags(mode, df, insights):
-    st.warning(flag)
+flags = generate_flags(mode, df, insights)
+
+if flags:
+    for flag in flags:
+        st.warning(flag)
+else:
+    st.success("No alerts detected for the current data.")
 
 # ---------------- STORYTELLING MODE ----------------
 st.divider()
 st.markdown("### 🧠 Data Story")
 
-from core.storyteller import generate_story
-
 story = generate_story(
     mode=mode,
-    comparisons=comparisons if "comparisons" in locals() else {},
-    flags=flags if "flags" in locals() else []
+    comparisons=comparisons,
+    flags=flags
 )
-
 st.info(story)
 
 # ---------------- SUMMARY ----------------
@@ -356,9 +380,10 @@ if mode == "prediction":
 
     target = st.selectbox("Target column", df.select_dtypes(include="number").columns)
     horizon = st.slider("Forecast periods", 1, 52, 12)
+    scenario = st.selectbox("Scenario", ["normal", "optimistic", "pessimistic"])
 
     from modes.prediction.forecast import forecast_values
-    forecast = forecast_values(df, target, horizon)
+    forecast = forecast_values(df, target, periods=horizon, scenario=scenario)
 
     st.line_chart(forecast)
     st.warning("Predictions are probabilistic, not guaranteed.")

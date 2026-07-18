@@ -1,24 +1,22 @@
-# 📊 InsightIQ — Explainable Analytics & Forecasting Platform
+# InsightIQ
 
-InsightIQ is a **multi-mode data analytics platform** designed to help users **understand, analyze, and interpret data** using statistics, data science, and explainable AI techniques.
-
-The project focuses on **clarity, transparency, and decision support**, rather than black-box predictions.
+Multi-mode analytics and forecasting platform built with Streamlit.
 
 ---
 
-## 🚀 Key Features
+## Key Features
 
-### 🔁 Multi-Mode Analysis
+### Multi-Mode Analysis
 
-* **Sales & Marketing Analytics**
-* **Stock Market & Portfolio Analysis**
-* **Prediction & Forecasting Mode**
+* **Sales & Marketing Analytics** — Analyze sales trends, growth/drop periods, and best/worst performance windows.
+* **Stock Market & Portfolio Analysis** — Track investment, current value, profit/loss, and portfolio volatility.
+* **Prediction & Forecasting Mode** — Linear trend forecasting with optimistic/pessimistic/normal scenario adjustments.
 
 Each mode adapts the analysis, metrics, and insights to the type of data provided.
 
 ---
 
-### 🧪 Data Quality Dashboard
+### Data Quality Dashboard
 
 * Row and column counts
 * Missing value detection
@@ -29,41 +27,36 @@ Each mode adapts the analysis, metrics, and insights to the type of data provide
 
 ---
 
-### 🧭 Column Auto-Mapping
+### Column Auto-Mapping
 
-* Automatically detects:
+* Automatically detects date columns and target/value columns
+* User can confirm or override mappings via dropdowns
 
-  * Date columns
-  * Target / value columns
-* User can confirm or override mappings
-
-> Makes the platform robust to messy, real-world CSV files.
+> Columns are detected by name patterns and data types, making the platform robust to differently-named CSV columns.
 
 ---
 
-### 📐 Statistical Analysis
+### Statistical Analysis
 
 * Mean, median, standard deviation
 * Min / max values
-* Confidence intervals (95%)
+* Confidence intervals (95%) using z-score
 
 All statistics are **deterministic and explainable**.
 
 ---
 
-### 📉 Metric Comparisons
+### Metric Comparisons
 
 * Latest vs previous period comparison
 * Percentage change
-* Direction indicators (↑ / ↓)
-
-> Designed for executive-style decision making.
+* Direction indicators (up / down)
 
 ---
 
-### 📈 Trend Strength Scoring
+### Trend Strength Scoring
 
-* Quantifies how strong a trend is (0–100)
+* Quantifies how strong a trend is (0–100) using R-squared from linear regression (`numpy.polyfit`)
 * Labels trends as **Weak / Moderate / Strong**
 * Indicates trend direction (upward / downward)
 
@@ -71,117 +64,121 @@ All statistics are **deterministic and explainable**.
 
 ---
 
-### 🚩 Smart Alerts
+### Smart Alerts
 
-Automatically flags:
+Rule-based flags for:
 
-* Significant sales drops
-* High portfolio volatility
+* Significant sales drops (>20% period-over-period)
+* High portfolio volatility (std > 5)
 * Loss-making portfolios
-* Forecast uncertainty
+* Long-horizon forecast warnings
 
 ---
 
-### 🧠 Storytelling Mode
+### Storytelling Mode
 
 Generates a **clear narrative summary** that explains:
 
-* What changed
-* Direction of key metrics
-* Risks and uncertainties
+* What changed (trend direction)
+* Mode-specific context
+* Whether risk alerts were detected
 
 > Converts raw numbers into understandable insights.
 
 ---
 
-### 🤖 Ask AI (NLP-Based)
+### Ask AI
 
-* Understands user questions using intent detection
-* Answers are **strictly grounded in computed data**
-* Avoids hallucinations and unsupported claims
-
----
-
-### 🔮 Forecasting & Scenarios
-
-* Time-series forecasting using historical trends
-* Scenario-aware predictions:
-
-  * Optimistic
-  * Normal
-  * Pessimistic
-* Explicit uncertainty warnings
+* Keyword-based intent detection — matches user questions against predefined keyword lists
+* Answers are **grounded in computed data**
+* Not a machine learning model; uses rule-based text matching
 
 ---
 
-### 📤 Export & Usability
+### Forecasting & Scenarios
+
+* Time-series forecasting using linear regression extrapolation
+* Scenario-aware predictions with fixed multipliers:
+
+  * Optimistic (+10%)
+  * Normal (baseline)
+  * Pessimistic (-15%)
+* Includes uncertainty warnings about forecast horizon
+
+---
+
+### Export & Usability
 
 * Download processed data as CSV
-* Download statistics summary
 * Manual data entry supported
 * Session reset controls
 
 ---
 
-## 🧠 Design Philosophy
+## Design Philosophy
 
 * **Explainability over black-box AI**
 * **Deterministic logic before generative AI**
 * **Clear uncertainty communication**
 * **Real-world data robustness**
 
-This project intentionally avoids claiming “accurate market prediction” and instead focuses on **decision support and analysis transparency**.
+This project intentionally avoids claiming "accurate market prediction" and instead focuses on **decision support and analysis transparency**.
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 * **Python**
 * **Streamlit** (UI & app framework)
-* **Pandas & NumPy** (data processing)
+* **Pandas & NumPy** (data processing, linear regression via `polyfit`)
 * **Matplotlib** (visualization)
-* **Scikit-learn concepts** (trend analysis)
-* **Custom NLP logic** (intent detection)
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```
 InsightIQ/
-│
-├── app.py
+├── app/
+│   └── app.py              # Main Streamlit application
 ├── core/
-│   ├── stats_engine.py
-│   ├── data_quality.py
-│   ├── column_mapper.py
-│   ├── metrics_compare.py
-│   ├── trend_strength.py
-│   ├── storyteller.py
-│   ├── insight_flags.py
-│   ├── ai_explainer.py
-│
+│   ├── ai_explainer.py     # Keyword-based Q&A system
+│   ├── column_mapper.py    # Automatic column detection
+│   ├── confidence.py       # 95% confidence intervals
+│   ├── data_quality.py     # Data quality reporting
+│   ├── insight_flags.py    # Rule-based alert generation
+│   ├── metrics_compare.py  # Period-over-period comparison
+│   ├── nlp_utils.py        # Text preprocessing and intent detection
+│   ├── stats_engine.py     # Basic descriptive statistics
+│   ├── storyteller.py      # Narrative generation from data
+│   ├── summary_generator.py# Mode-specific text summaries
+│   ├── time_grouping.py    # Time-based aggregation
+│   ├── trend_strength.py   # Trend scoring via linear regression
+│   └── visuals.py          # Matplotlib trend plots
 ├── modes/
+│   ├── prediction/
+│   │   └── forecast.py     # Linear extrapolation with scenario multipliers
 │   ├── sales/
-│   ├── stocks/
-│   └── prediction/
-│
+│   │   └── analysis.py     # Sales-specific insights
+│   └── stocks/
+│       └── analysis.py     # Portfolio insights (P/L, volatility)
+├── data/                   # Sample or uploaded data
 ├── requirements.txt
 └── README.md
 ```
 
 ---
 
-## ▶️ How to Run Locally
+## How to Run Locally
 
-### 1️⃣ Clone the repository
+### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/InsightIQ.git
+git clone https://github.com/KanannSharmaa25/InsightIQ.git
 cd InsightIQ
 ```
 
-### 2️⃣ Create virtual environment
+### 2. Create virtual environment
 
 ```bash
 python -m venv venv
@@ -189,21 +186,21 @@ source venv/bin/activate   # macOS/Linux
 venv\Scripts\activate      # Windows
 ```
 
-### 3️⃣ Install dependencies
+### 3. Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4️⃣ Run the app
+### 4. Run the app
 
 ```bash
-streamlit run app.py
+streamlit run app/app.py
 ```
 
 ---
 
-## ⚠️ Disclaimer
+## Disclaimer
 
 This platform provides **data-driven insights and probabilistic forecasts** based on historical information.
 
@@ -215,34 +212,7 @@ This project is intended for **educational and analytical purposes only**.
 
 ---
 
-## 📌 Why This Project Stands Out
-
-* Handles **real-world messy data**
-* Prioritizes **explainability**
-* Includes **storytelling & decision support**
-* Avoids misleading AI claims
-* Built like a **product**, not a demo
-
----
-
-## 📸 Suggested Screenshots for GitHub
-
-Include:
-
-1. Mode selection screen
-2. Data quality dashboard
-3. Metric comparisons
-4. Trend strength score
-5. Storytelling summary
-6. Forecasting with disclaimer
-
----
-
-## 👤 Author
+## Author
 
 Kanan Sharma  
 Portfolio project focused on applied data science, statistical analysis, and explainable AI.
-
-
----
-

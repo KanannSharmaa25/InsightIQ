@@ -1,21 +1,29 @@
 import pandas as pd
 
 
-def sales_insights(df: pd.DataFrame):
+def sales_insights(df: pd.DataFrame, date_col: str = None, target_col: str = "Sales"):
+    """
+    Compute sales insights using the mapped date/target columns
+    instead of assuming fixed column names.
+    """
     insights = {}
 
-    if "Sales" in df.columns:
-        df["Sales_Change"] = df["Sales"].diff()
+    if target_col not in df.columns:
+        return insights
 
-        insights["total_sales"] = df["Sales"].sum()
-        insights["average_sales"] = df["Sales"].mean()
-        insights["max_sales"] = df["Sales"].max()
-        insights["min_sales"] = df["Sales"].min()
+    df = df.copy()
+    df["_change"] = df[target_col].diff()
 
-        insights["best_period"] = df.loc[df["Sales"].idxmax(), "Date"]
-        insights["worst_period"] = df.loc[df["Sales"].idxmin(), "Date"]
+    insights["total_sales"] = df[target_col].sum()
+    insights["average_sales"] = df[target_col].mean()
+    insights["max_sales"] = df[target_col].max()
+    insights["min_sales"] = df[target_col].min()
 
-        insights["growth_periods"] = int((df["Sales_Change"] > 0).sum())
-        insights["drop_periods"] = int((df["Sales_Change"] < 0).sum())
+    if date_col and date_col in df.columns:
+        insights["best_period"] = df.loc[df[target_col].idxmax(), date_col]
+        insights["worst_period"] = df.loc[df[target_col].idxmin(), date_col]
+
+    insights["growth_periods"] = int((df["_change"] > 0).sum())
+    insights["drop_periods"] = int((df["_change"] < 0).sum())
 
     return insights
